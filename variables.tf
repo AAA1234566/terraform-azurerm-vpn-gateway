@@ -95,8 +95,14 @@ variable "local_networks" {
   default     = []
 }
 
+variable "bgp_settings" {
+  type        =list(object({asn = number, peer_weight = number, peering_addresses = list(object({ip_configuration_name = string, apipa_addresses = list(string)}))}))
+  description = "Network Gateway's BGP speaker settings"
+  default     = null
+}
+
 variable "local_bgp_settings" {
-  type        = list(object({ asn_number = number, peering_address = string, peer_weight = number }))
+  type        = list(object({ asn_number = number, bgp_peering_address = string, peer_weight = number }))
   description = "Local Network Gateway's BGP speaker settings"
   default     = null
 }
