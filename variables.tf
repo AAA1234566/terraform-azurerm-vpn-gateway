@@ -102,7 +102,7 @@ variable "bgp_settings" {
 }
 
 variable "local_bgp_settings" {
-  type        = list(object({ asn_number = number, bgp_peering_address = string, peer_weight = number }))
+  type        = list(object({ asn_number = number, peering_address = string, peer_weight = number }))
   description = "Local Network Gateway's BGP speaker settings"
   default     = null
 }
