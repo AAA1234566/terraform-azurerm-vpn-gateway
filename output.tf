@@ -12,3 +12,11 @@ output "vpn_gateway_public_ip_fqdn" {
   description = "Fully qualified domain name of the virtual network gateway"
   value       = flatten(concat([azurerm_public_ip.pip_gw.fqdn], [var.enable_active_active != null ? azurerm_public_ip.pip_aa.*.fqdn : null]))
 }
+
+#output "vpn_gateway_all" {
+#  value = azurerm_virtual_network_gateway.vpngw
+#}
+
+output "default_peering_address" {
+  value = azurerm_virtual_network_gateway.vpngw.bgp_settings[0].peering_addresses[0].default_addresses[0]
+}
