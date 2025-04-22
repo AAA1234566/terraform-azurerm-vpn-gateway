@@ -1,6 +1,13 @@
 #----------------------------------------------------------
 # Resource Group, VNet, Subnet selection & Random Resources
 #----------------------------------------------------------
+
+locals {
+  empty_list   = []
+  empty_map    = tomap({})
+  empty_string = ""
+}
+
 data "azurerm_resource_group" "rg" {
   name = var.resource_group_name
 }
@@ -63,10 +70,10 @@ resource "azurerm_virtual_network_gateway" "vpngw" {
   active_active       = var.vpn_gw_sku != "Basic" ? var.enable_active_active : false
   enable_bgp          = var.vpn_gw_sku != "Basic" ? var.enable_bgp : false
   generation          = var.vpn_gw_generation
-
+  private_ip_address_enabled = true
 
   dynamic "bgp_settings" {
-    for_each = var.enable_bgp ? [true] : []
+    for_each = var.bgp_settings != null ? var.bgp_settings : []
 
     content {
       # Optional attributes
@@ -74,7 +81,8 @@ resource "azurerm_virtual_network_gateway" "vpngw" {
       peer_weight = try(bgp_settings.value["peer_weight"], null)
       
       dynamic "peering_addresses" {
-        for_each = try(bgp_settings.value["peering_addresses"], local.empty_list)
+        #for_each = var.local_bgp_settings != null ? [true] : []
+        for_each = var.local_bgp_settings != null ? [true] : []
         content {
           ip_configuration_name = try(peering_addresses.value["ip_configuration_name"], null)
           apipa_addresses       = try(peering_addresses.value["apipa_addresses"], null)        
@@ -92,6 +100,8 @@ resource "azurerm_virtual_network_gateway" "vpngw" {
 
   dynamic "ip_configuration" {
     for_each = var.enable_active_active ? [true] : []
+
+
     content {
       name                          = "vnetGatewayAAConfig"
       public_ip_address_id          = azurerm_public_ip.pip_gw.id
@@ -152,6 +162,7 @@ resource "azurerm_virtual_network_gateway_connection" "az-hub-onprem" {
   peer_virtual_network_gateway_id = var.gateway_connection_type == "Vnet2Vnet" ? var.peer_virtual_network_gateway_id : null
   shared_key                      = var.gateway_connection_type != "ExpressRoute" ? var.local_networks[count.index].shared_key : null
   connection_protocol             = var.gateway_connection_type == "IPSec" && var.vpn_gw_sku == ["VpnGw1", "VpnGw2", "VpnGw3", "VpnGw1AZ", "VpnGw2AZ", "VpnGw3AZ"] ? var.gateway_connection_protocol : null
+  enable_bgp = true
 
   dynamic "ipsec_policy" {
     for_each = var.local_networks_ipsec_policy != null ? [true] : []
